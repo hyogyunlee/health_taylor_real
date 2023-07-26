@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "727668312119",
+    "firebase_url": "https://health10293-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "health10293",
+    "storage_bucket": "health10293.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:727668312119:android:ddd3afcb01f6bdc29dd7b2",
+        "android_client_info": {
+          "package_name": "com.example.health_taylor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "727668312119-v5oecf3ffuobegjvdc1o5i3ioav4pt7p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.health_taylor",
+            "certificate_hash": "fa75538e9ca4ad332c25c0ed499ac1eeb929faa9"
+          }
+        },
+        {
+          "client_id": "727668312119-v8b9ci1hsgacinkj69i6ndgdpjf6f2f4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.health_taylor",
+            "certificate_hash": "2a9a893898ed9802c5874c4a138d9282ca5cfa5f"
+          }
+        },
+        {
+          "client_id": "727668312119-lgpq11p7gmt02lfi4fello3kvd12i7pt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtKuEMMGzl2rbVEfRdEo-psg91I7fcQqM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "727668312119-e3misffk26t8csiqdfqvrb6mkr4lmuk1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "727668312119-5e2su7kuodtls02omtfjfgs4b6a9v8po.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.healthtaylor"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
