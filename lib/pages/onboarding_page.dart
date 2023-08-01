@@ -932,10 +932,10 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 80.0),
                       child: Text(
-                        '???님이 입력하신 정보를 분석해 \n 보충제 포트폴리오를 추천해드리겠습니다',
+                        '$nickname님이 입력하신 정보를 분석해 \n 보충제 포트폴리오를 추천해드리겠습니다',
                         style: TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 18),
                       ),
