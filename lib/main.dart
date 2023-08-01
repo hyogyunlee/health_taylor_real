@@ -5,11 +5,10 @@ import 'package:health_taylor/auth/login_page.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:firebase_core/firebase_core.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['profile']);
+GoogleSignIn _googleSignIn = GoogleSignIn();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.removeAfter(initialization);
@@ -18,7 +17,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  print(await KakaoSdk.origin);
   runApp(const MyApp());
 }
 
@@ -46,8 +44,11 @@ class MyApp extends StatelessWidget {
     bool isKakaoLoggedIn = await isSignedInKakao();
     bool isGoogleLoggedIn = await isSignedInGoogle();
 
+    print(isKakaoLoggedIn);
+    print(isGoogleLoggedIn);
+
     if (isKakaoLoggedIn || isGoogleLoggedIn) {
-      return HomePage();
+      return All_Page();
     } else {
       return LoginPage();
     }
@@ -66,7 +67,54 @@ class MyApp extends StatelessWidget {
         Locale('en', 'US'),
       ],
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+        home: FutureBuilder<Widget>(
+          future: _getInitialScreen(),
+          builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                print(snapshot.error);
+                return Text('Error occurred');
+              } else {
+                return snapshot.data!;
+              }
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
+        )
     );
   }
 }
+/*import 'package:flutter/material.dart';
+import 'package:health_taylor/ev_provider.dart';
+import 'package:health_taylor/home.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        // MultiProvider를 통해 여러가지 Provider를 관리
+        home: MultiProvider(
+
+          // ChangeNotifierProvider 통해 변화에 대해 구독
+            providers: [
+              ChangeNotifierProvider(
+                  create: (BuildContext context) => EvProvider())
+            ],
+            child:
+            Home() // home.dart
+        )
+    );
+  }
+}*/

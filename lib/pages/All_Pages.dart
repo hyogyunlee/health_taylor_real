@@ -4,14 +4,14 @@ import 'package:health_taylor/pages/PortfolioPage/Portfolio_Page.dart';
 import 'package:health_taylor/pages/SocialPage/social_page.dart';
 import 'package:health_taylor/pages/ProfilePage/profile_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class All_Page extends StatefulWidget {
+  const All_Page({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<All_Page> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<All_Page> {
   late int _currentPageIndex;
 
   @override
@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   Widget? _bodyWidget() {
     switch (_currentPageIndex) {
       case 0:
-        return const Page1();
+        return const Home_Page();
       case 1:
         return Page2();
       case 2:
@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                   Icons.book_rounded,
                   color: Colors.blue[700],
                 )),
-            label: '포폴 제공?',
+            label: '포폴 제공',
             activeIcon: const Padding(
                 padding: EdgeInsets.only(bottom: 5),
                 child: Icon(Icons.book_rounded, color: Colors.white)),

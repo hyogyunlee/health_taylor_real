@@ -1,13 +1,28 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:health_taylor/components/google_button.dart';
 import 'package:health_taylor/components/kakao_button.dart';
-import 'package:health_taylor/pages/onboarding_page.dart';
+import 'package:health_taylor/pages/All_Pages.dart';
+import 'package:health_taylor/pages/Select.dart';
 import 'package:health_taylor/auth/google_login/google_login.dart';
 import 'package:health_taylor/auth/google_login/google_main_view_model.dart';
 import 'package:health_taylor/auth/kakao_login/kakao_login.dart';
 import 'package:health_taylor/auth/kakao_login/kakao_main_view_model.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
+
+Future<DocumentSnapshot?> fetchUserInfo(String? uid) async {
+  try {
+    final firestore = FirebaseFirestore.instance;
+    final documentSnapshot = await firestore.collection('users').doc(uid).get();
+    if (documentSnapshot.exists) {
+      return documentSnapshot;
+    }
+  } catch (e) {
+    print('Error fetching user info from Firestore: $e');
+  }
+  return null;
+}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
   final kakaoviewModel = kakao_MainViewModel(KakaoLogin());
   final googleviewModel = google_MainViewModel(GoogleLogin());
 
-  Future<void> uploadUserInfoToFirestore(kakao.User? user) async {
+  /*Future<void> uploadUserInfoToFirestore(kakao.User? user) async {
     if (user == null || user.kakaoAccount == null) return;
 
     // 사용자 정보를 Firestore의 'users' 컬렉션에 추가합니다.
@@ -40,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       print('Error adding user to Firestore: $e');
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const OnBoardingPage(),
+                                builder: (context) => const Select(),
                               ));
                         },
                         child: const Text('일단 로그인')),
@@ -138,14 +153,16 @@ class _LoginPageState extends State<LoginPage> {
                         child: kakaoButton(
                             ontap: () async {
                               await kakaoviewModel.login();
+                              kakao.User? user= await kakao.UserApi.instance.me();
+                              final userInfo = await fetchUserInfo(user.id.toString());
+                              final hasEmptyFields = userInfo == null || userInfo.get('gender') == null || userInfo.get('age') == null || userInfo.get('nickname') == null || userInfo.get('height') == null || userInfo.get('weight') == null || userInfo.get('goal') == null || userInfo.get('fat') == null || userInfo.get('muscle') == null;
                               if (kakaoviewModel.isLogined) {
-                                await uploadUserInfoToFirestore(
-                                    kakaoviewModel.user); // 사용자 정보 업로드
+                                /*await uploadUserInfoToFirestore(
+                                    kakaoviewModel.user); // 사용자 정보 업로드*/
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const OnBoardingPage(),
+                                    builder: (context) => hasEmptyFields ? const Select() : const All_Page(),
                                   ),
                                 );
                               }
@@ -158,12 +175,15 @@ class _LoginPageState extends State<LoginPage> {
                         child: googleButton(
                             ontap: () async {
                               await googleviewModel.login();
+                              final currentUser = FirebaseAuth.instance.currentUser;
+                              final userInfo = await fetchUserInfo(currentUser?.uid);
+                              final hasEmptyFields = userInfo?.get('gender') == null || userInfo?.get('age') == null || userInfo?.get('nickname') == null || userInfo?.get('height') == null || userInfo?.get('weight') == null || userInfo?.get('goal') == null || userInfo?.get('fat') == null || userInfo?.get('muscle') == null;
+                              print(hasEmptyFields);
                               if (googleviewModel.isLogined) {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const OnBoardingPage(),
+                                    builder: (context) => hasEmptyFields ? const Select() : const All_Page(),
                                   ),
                                 );
                               }

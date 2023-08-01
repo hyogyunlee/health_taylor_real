@@ -53,6 +53,10 @@ dependencies:
   lottie: ^2.4.0
   intl: ^0.18.1
   flutter_localization: ^0.1.13
+  provider: ^6.0.1 # provider 패키지 추가
+  carousel_slider: ^4.2.1
+
+
 
 dev_dependencies:
   flutter_test:

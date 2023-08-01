@@ -1,25 +1,52 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:health_taylor/pages/All_Pages.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:health_taylor/components/agePicker.dart';
 import 'package:health_taylor/components/textfield.dart';
 import 'package:health_taylor/pages/agree/agree.dart';
-import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:lottie/lottie.dart';
 
+GoogleSignIn _googleSignIn = GoogleSignIn();
+
+Future<String?> getNickname() async {
+  String? nickname;
+  try {
+    GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
+    if (googleUser != null) {
+      nickname = googleUser.displayName;
+      return nickname;
+    } else {
+      final kakaoUser = await kakao.UserApi.instance.me();
+      if (kakaoUser.properties != null) {
+        nickname = kakaoUser.properties!['nickname'];
+        return nickname;
+      }
+    }
+  } catch (error) {
+    print("Error fetching user name: $error");
+  }
+  return '';
+}
+
 class OnBoardingPage extends StatefulWidget {
-  const OnBoardingPage({Key? key}) : super(key: key);
+  final int startPageIndex;
+  const OnBoardingPage({Key? key, this.startPageIndex = 0}) : super(key: key);
 
   @override
   State<OnBoardingPage> createState() => _OnBoardingPageState();
 }
 
 class _OnBoardingPageState extends State<OnBoardingPage> {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  final PageController _pageController = PageController(initialPage: 0);
+  late final PageController _pageController;
   int _currentPageIndex = 0;
   DateTime _dateTime = DateTime.now();
+
+  GoogleSignIn _googleSignIn = GoogleSignIn();
+  kakao.User? user;
+  final currentUser = FirebaseAuth.instance.currentUser;
 
   bool diseaseNo = false;
   bool diseaseYes = false;
@@ -39,7 +66,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   final weightEditingController = TextEditingController();
   final brandEditingController = TextEditingController();
   final tasteEditingController = TextEditingController();
-  final catergoryEditingController = TextEditingController();
+  final categoryEditingController = TextEditingController();
   final goalEditingController = TextEditingController();
   final fatEditingController = TextEditingController();
   final muscleEditingController = TextEditingController();
@@ -47,25 +74,58 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   final familyEditingController = TextEditingController();
 
   // 유저 정보 업데이트
-  void update() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.email)
-        .update({
-      'gender': maleSelect ? 'male' : 'female',
-      'age': ageEditingController.text,
-      'nickname': nameEditingController.text,
-      'height': heightEditingController.text,
-      'weight': weightEditingController.text,
-      'brand': proteinYes ? brandEditingController.text : '',
-      'taste': proteinYes ? tasteEditingController.text : '',
-      'category': proteinYes ? catergoryEditingController.text : '',
-      'goal': goalEditingController.text,
-      'fat': fatEditingController.text,
-      'muscle': muscleEditingController.text,
-      'disease': diseaseEditingController.text,
-      'family': familyEditingController.text,
-    });
+  void FirestoreUpload() async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    //로그인 확인
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+    } catch (e) {
+      isKakaoLoggedIn = false;
+    }
+
+    //로그인된 소셜에 따라
+    if (isGoogleLoggedIn) {
+      await firestore.collection('users').doc(currentUser?.uid).set({
+        'gender': maleSelect ? 'male' : 'female',
+        'age': ageEditingController.text,
+        'nickname': currentUser?.displayName,
+        'height': heightEditingController.text,
+        'weight': weightEditingController.text,
+        'brand': proteinYes ? brandEditingController.text : '',
+        'taste': proteinYes ? tasteEditingController.text : '',
+        'category': proteinYes ? categoryEditingController.text : '',
+        'goal': goalEditingController.text,
+        'fat': fatEditingController.text,
+        'muscle': muscleEditingController.text,
+        'disease': diseaseEditingController.text,
+        'family': familyEditingController.text,
+        'email': currentUser?.email,
+        'photoURL': currentUser?.photoURL,
+      },SetOptions(merge: true));
+    } else if (isKakaoLoggedIn) {
+      user = await kakao.UserApi.instance.me();
+      await firestore.collection('users').doc(user?.id.toString()).set({
+        'gender': maleSelect ? 'male' : 'female',
+        'age': ageEditingController.text,
+        'nickname': user!.kakaoAccount!.profile!.nickname,
+        'height': heightEditingController.text,
+        'weight': weightEditingController.text,
+        'brand': proteinYes ? brandEditingController.text : '',
+        'taste': proteinYes ? tasteEditingController.text : '',
+        'category': proteinYes ? categoryEditingController.text : '',
+        'goal': goalEditingController.text,
+        'fat': fatEditingController.text,
+        'muscle': muscleEditingController.text,
+        'disease': diseaseEditingController.text,
+        'family': familyEditingController.text,
+        'email':user!.kakaoAccount!.email ?? '',
+        'photoURL':user!.kakaoAccount!.profile!.profileImageUrl!,
+      },SetOptions(merge: true));
+    }
   }
 
   void nextPage() {
@@ -95,6 +155,19 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   void onDateTimeChanged(dateTime) {
     setState(() {
       _dateTime = dateTime;
+    });
+  }
+
+  String nickname = '???';
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.startPageIndex);
+    getNickname().then((value) {
+      setState(() {
+        nickname = value!;
+      });
     });
   }
 
@@ -217,7 +290,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -256,7 +329,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -289,7 +362,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -322,7 +395,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -382,13 +455,13 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 15, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 10, 15,0),
                         child: SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Padding(
-                                padding: EdgeInsets.only(top: 20.0),
+                                padding: EdgeInsets.only(top: 20.0, bottom: 20),
                                 child: Text(
                                   '가입을 축하드립니다! \n활용될 정보들을 입력해주세요',
                                   style: TextStyle(
@@ -397,12 +470,12 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.only(bottom: 110.0),
+                                padding: EdgeInsets.only(bottom: 150),
                                 child: Column(
                                   children: [
                                     Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                       children: [
                                         OutlinedButton(
                                           onPressed: () {
@@ -423,8 +496,8 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                                 side: BorderSide(
                                                     color: Colors.white),
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                        20.0)),
+                                                BorderRadius.circular(
+                                                    20.0)),
                                           ),
                                           child: Container(
                                               width: 100,
@@ -450,8 +523,8 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                                 side: BorderSide(
                                                     color: Colors.white),
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                        20.0)),
+                                                BorderRadius.circular(
+                                                    20.0)),
                                           ),
                                           child: Container(
                                               width: 100,
@@ -463,61 +536,54 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                     const SizedBox(
                                       height: 10,
                                     ),
-                                    ElevatedButton(
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              content: Column(
-                                                children: [
-                                                  BirthDatePicker(
-                                                      onDateTimeChanged:
-                                                          onDateTimeChanged,
-                                                      initDateStr:
-                                                          _dateTime.toString()),
-                                                  Text(_dateTime.toString()),
-                                                ],
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(
-                                                          context, _dateTime);
-                                                    },
-                                                    child: Text('확인')),
-                                                TextButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(context);
-                                                    },
-                                                    child: Text('취소')),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                        child: const Text('나이')),
-                                    Mytextfield(
-                                        text: '나이',
-                                        textEditingController:
-                                            ageEditingController),
+                                    InkWell(onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          content:
+                                          BirthDatePicker(
+                                              onDateTimeChanged:
+                                              onDateTimeChanged,
+                                              initDateStr:
+                                              _dateTime.toString()),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                      context, _dateTime);
+                                                },
+                                                child: Text('확인')),
+                                            TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Text('취소')),
+                                          ],
+                                        ),
+                                      );
+                                    }, child: Container(width: width, padding: EdgeInsets.all(15),
+                                      decoration: BoxDecoration(color: Colors.grey[200] , borderRadius: BorderRadius.circular(10)),
+                                      child: Text('생년월일  ${_dateTime.toString().substring(0,11)}' ,style: TextStyle(color: Colors.grey[50600]),),
+                                    ),),
+
                                     Mytextfield(
                                         text: '닉네임',
                                         textEditingController:
-                                            nameEditingController),
+                                        nameEditingController),
                                     Mytextfield(
                                         text: '키',
                                         textEditingController:
-                                            heightEditingController),
+                                        heightEditingController),
                                     Mytextfield(
                                         text: '몸무게',
                                         textEditingController:
-                                            weightEditingController),
+                                        weightEditingController),
                                   ],
                                 ),
                               ),
-                              (ageEditingController.text.isNotEmpty &&
-                                      nameEditingController.text.isNotEmpty &&
-                                      heightEditingController.text.isNotEmpty &&
-                                      weightEditingController.text.isNotEmpty)
+                              ( nameEditingController.text.isNotEmpty &&
+                                  heightEditingController.text.isNotEmpty &&
+                                  weightEditingController.text.isNotEmpty)
                                   ? nextButton('다음')
                                   : deadButton('다음')
                             ],
@@ -574,7 +640,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         padding: EdgeInsets.all(20),
                                         shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(15)),
+                                            BorderRadius.circular(15)),
                                         backgroundColor: Color(0xFFF5F6F9),
                                       ),
                                       onPressed: () {
@@ -602,7 +668,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         padding: EdgeInsets.all(20),
                                         shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(15)),
+                                            BorderRadius.circular(15)),
                                         backgroundColor: Color(0xFFF5F6F9),
                                       ),
                                       onPressed: () {
@@ -628,15 +694,15 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         Mytextfield(
                                             text: '보충제 브랜드 및 이름',
                                             textEditingController:
-                                                brandEditingController),
+                                            brandEditingController),
                                         Mytextfield(
                                             text: '보충제 맛',
                                             textEditingController:
-                                                tasteEditingController),
+                                            tasteEditingController),
                                         Mytextfield(
                                             text: '보충제 종류',
                                             textEditingController:
-                                                catergoryEditingController),
+                                            categoryEditingController),
                                       ],
                                     ),
                                   SizedBox(
@@ -645,11 +711,11 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                 ],
                               ),
                               (brandEditingController.text.isNotEmpty &&
-                                          tasteEditingController
-                                              .text.isNotEmpty &&
-                                          catergoryEditingController
-                                              .text.isNotEmpty ||
-                                      proteinNo)
+                                  tasteEditingController
+                                      .text.isNotEmpty &&
+                                  categoryEditingController
+                                      .text.isNotEmpty ||
+                                  proteinNo)
                                   ? nextButton('다음')
                                   : deadButton('다음')
                             ],
@@ -700,20 +766,20 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                   Mytextfield(
                                       text: '운동목표',
                                       textEditingController:
-                                          goalEditingController),
+                                      goalEditingController),
                                   Mytextfield(
                                       text: '체지방률',
                                       textEditingController:
-                                          fatEditingController),
+                                      fatEditingController),
                                   Mytextfield(
                                       text: '골격근량',
                                       textEditingController:
-                                          muscleEditingController),
+                                      muscleEditingController),
                                 ],
                               ),
                               (goalEditingController.text.isNotEmpty &&
-                                      fatEditingController.text.isNotEmpty &&
-                                      muscleEditingController.text.isNotEmpty)
+                                  fatEditingController.text.isNotEmpty &&
+                                  muscleEditingController.text.isNotEmpty)
                                   ? nextButton('다음')
                                   : deadButton('다음')
                             ],
@@ -764,7 +830,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         padding: EdgeInsets.all(20),
                                         shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(15)),
+                                            BorderRadius.circular(15)),
                                         backgroundColor: Color(0xFFF5F6F9),
                                       ),
                                       onPressed: () {
@@ -792,7 +858,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         padding: EdgeInsets.all(20),
                                         shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(15)),
+                                            BorderRadius.circular(15)),
                                         backgroundColor: Color(0xFFF5F6F9),
                                       ),
                                       onPressed: () {
@@ -818,36 +884,41 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                         Mytextfield(
                                             text: '질병',
                                             textEditingController:
-                                                diseaseEditingController),
+                                            diseaseEditingController),
                                         Mytextfield(
                                             text: '가족력',
                                             textEditingController:
-                                                familyEditingController),
+                                            familyEditingController),
                                       ],
                                     ),
                                 ],
                               ),
                             ),
                             (diseaseEditingController.text.isNotEmpty &&
-                                        familyEditingController
-                                            .text.isNotEmpty ||
-                                    diseaseNo)
+                                familyEditingController
+                                    .text.isNotEmpty ||
+                                diseaseNo)
                                 ? ElevatedButton(
-                                    onPressed: () {
-                                      nextPage();
-                                      update();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(25)),
-                                        fixedSize: Size(width, 50),
-                                        backgroundColor: Colors.black),
-                                    child: Text(
-                                      '다음',
-                                      style: TextStyle(fontSize: 18),
-                                    ))
+                                onPressed: () {
+                                  nextPage();
+                                  try {
+                                    FirestoreUpload();
+                                    print('Firestore data updated successfully');
+                                  } catch (error) {
+                                    print('Error updating Firestore data: $error');
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(25)),
+                                    fixedSize: Size(width, 50),
+                                    backgroundColor: Colors.black),
+                                child: Text(
+                                  '다음',
+                                  style: TextStyle(fontSize: 18),
+                                ))
                                 : deadButton('다음')
                           ],
                         ),
@@ -879,7 +950,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                           onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => HomePage(),
+                                builder: (context) => All_Page(),
                               )),
                           style: ElevatedButton.styleFrom(
                               fixedSize: Size(width, 50),

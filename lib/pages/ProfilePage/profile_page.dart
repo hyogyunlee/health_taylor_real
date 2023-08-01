@@ -1,6 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:health_taylor/auth/login_page.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
+
+GoogleSignIn _googleSignIn = GoogleSignIn();
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
+Future<void> signOut() async {
+  try {
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+    } catch (e) {
+      isKakaoLoggedIn = false;
+    }
+
+    if (isGoogleLoggedIn) {
+      await _auth.signOut();
+      await _googleSignIn.signOut();
+      print("Google sign out success");
+    } else if (isKakaoLoggedIn) {
+      await kakao.UserApi.instance.logout();
+      print("Kakao sign out success");
+    }
+
+  } catch (error) {
+    print("Error signing out: $error");
+  }
+}
+
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -11,6 +44,28 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser;
+  kakao.User? user;
+  String? uid;
+
+  void Determine_Uid() async {
+    //로그인 확인
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+      user = await kakao.UserApi.instance.me();
+    } catch (e) {
+      isKakaoLoggedIn = false;
+    }
+
+    if (mounted) {
+      setState(() {
+        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? user?.id.toString() : null;
+      });
+    }
+  }
 
   box(Icon icon, String text) {
     return Padding(
@@ -36,6 +91,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    Determine_Uid();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -55,18 +116,21 @@ class _ProfilePageState extends State<ProfilePage> {
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .doc(currentUser?.email)
+                  .doc(uid)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                if (snapshot.hasData && snapshot.data!.data() != null) {
                   final data = snapshot.data!.data() as Map<String, dynamic>;
-
                   return Center(
                     child: Column(
                       children: [
                         ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: Image.network(data['photoURL'])),
+                            child: Image.network(data['photoURL']?? '',
+                            fit: BoxFit.cover,
+                            width: 120,
+                            height: 120),
+                        ),
                         SizedBox(
                           height: 10,
                         ),
@@ -74,20 +138,30 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(
                           height: 10,
                         ),
-                        Text('${currentUser?.email}'),
+                        Text(uid ?? ''),
                         SizedBox(
                           height: 30,
                         ),
                         box(Icon(Icons.person), '내정보'),
                         box(Icon(Icons.notifications), '알림 설정'),
                         box(Icon(Icons.announcement_rounded), '공지사항 및 문의'),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Divider(
-                            thickness: 2,
+                        ElevatedButton(
+                          onPressed: () async {
+                            await signOut();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LoginPage(),
+                              ),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout_rounded),
+                              Text("로그아웃"),
+                            ],
                           ),
                         ),
-                        box(Icon(Icons.logout_rounded), '로그아웃'),
                       ],
                     ),
                   );
