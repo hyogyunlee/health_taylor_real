@@ -947,7 +947,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                     Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: ElevatedButton(
-                          onPressed: () => Navigator.push(
+                          onPressed: () => Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => All_Page(),
