@@ -21,7 +21,6 @@ class _loadState extends State<load> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          Text("건강검진데이터 불러오기"),
           Expanded(
             child: MultiProvider(
               // ChangeNotifierProvider 통해 변화에 대해 구독

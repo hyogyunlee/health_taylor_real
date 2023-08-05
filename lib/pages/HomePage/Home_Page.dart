@@ -226,13 +226,13 @@ class _HomePageState extends State<Home_Page> {
                   ),
                 ),
                 Center(
-                  child: StreamBuilder(
+                  child: StreamBuilder <DocumentSnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('users')
                         .doc(uid)
                         .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
+                    builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                      if (snapshot.hasData && snapshot.data!.exists) {
                         final data = snapshot.data!.data() as Map<String, dynamic>;
                         return Column(
                           children: [
@@ -362,7 +362,7 @@ class _HomePageState extends State<Home_Page> {
                                     ),
                                     InkWell(
                                       onTap: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => const load(isFromHome_Page:true),
