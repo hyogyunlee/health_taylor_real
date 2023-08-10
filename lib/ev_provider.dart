@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:health_taylor/ev.dart';
 import 'package:health_taylor/ev_repositiory.dart';
 
@@ -24,4 +24,4 @@ class EvProvider extends ChangeNotifier {
     }
     notifyListeners(); // 데이터가 업데이트가 됐으면 구독자에게 알린다.
   }
-}
+}*/

@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+/*import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:health_taylor/ev_provider.dart';
 import 'package:health_taylor/home.dart';
@@ -45,7 +45,7 @@ class _loadState extends State<load> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OnBoardingPage(startPageIndex: 2),
+                      builder: (context) => OnBoardingPage(),
                     ),
                   );
                 }
@@ -56,3 +56,4 @@ class _loadState extends State<load> {
     );
   }
 }
+*/

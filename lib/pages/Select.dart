@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+/*import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:health_taylor/load.dart';
 import 'package:health_taylor/pages/onboarding_page.dart';
@@ -33,7 +33,7 @@ class Select extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OnBoardingPage(startPageIndex: 1),
+                          builder: (context) => OnBoardingPage(),
                         ),
                       );
                     },
@@ -47,3 +47,4 @@ class Select extends StatelessWidget {
     );
   }
 }
+*/

@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 class Mytextfield extends StatelessWidget {
   final String text;
+  final String? hintText;
   final TextEditingController textEditingController;
-  const Mytextfield(
-      {super.key, required this.text, required this.textEditingController});
+
+  Mytextfield({
+    required this.text,
+    this.hintText,
+    required this.textEditingController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +18,7 @@ class Mytextfield extends StatelessWidget {
       child: TextField(
         controller: textEditingController,
         decoration: InputDecoration(
-            hintText: text,
+            hintText: hintText ?? text,
             contentPadding: const EdgeInsets.only(left: 20),
             filled: true,
             fillColor: Colors.grey[200],

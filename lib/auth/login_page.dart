@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:health_taylor/components/google_button.dart';
 import 'package:health_taylor/components/kakao_button.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
-import 'package:health_taylor/pages/Select.dart';
 import 'package:health_taylor/auth/google_login/google_login.dart';
 import 'package:health_taylor/auth/google_login/google_main_view_model.dart';
 import 'package:health_taylor/auth/kakao_login/kakao_login.dart';
 import 'package:health_taylor/auth/kakao_login/kakao_main_view_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:health_taylor/pages/onboarding_page.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
 Future<DocumentSnapshot?> fetchUserInfo(String? uid) async {
@@ -129,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const Select(),
+                                builder: (context) => const OnBoardingPage(),
                               ));
                         },
                         child: const Text('일단 로그인')),
@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => hasEmptyFields ? const Select() : const All_Page(),
+                                    builder: (context) => hasEmptyFields ? const OnBoardingPage() : const All_Page(),
                                   ),
                                 );
                               }
@@ -183,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => hasEmptyFields ? const Select() : const All_Page(),
+                                    builder: (context) => hasEmptyFields ? const OnBoardingPage() : const All_Page(),
                                   ),
                                 );
                               }

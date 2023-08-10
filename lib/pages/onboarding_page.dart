@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:health_taylor/ev.dart';
+import 'package:health_taylor/ev_repositiory.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:health_taylor/components/agePicker.dart';
@@ -32,14 +34,20 @@ Future<String?> getNickname() async {
 }
 
 class OnBoardingPage extends StatefulWidget {
-  final int startPageIndex;
-  const OnBoardingPage({Key? key, this.startPageIndex = 0}) : super(key: key);
+  const OnBoardingPage({super.key});
 
   @override
   State<OnBoardingPage> createState() => _OnBoardingPageState();
 }
 
 class _OnBoardingPageState extends State<OnBoardingPage> {
+  EvRepository _evRepository = EvRepository();
+
+  Ev? ev;
+
+  int heightHint=0;
+  int weightHint=0;
+
   late final PageController _pageController;
   int _currentPageIndex = 0;
   DateTime _dateTime = DateTime.now();
@@ -86,14 +94,21 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
       isKakaoLoggedIn = false;
     }
 
+    String uploadHeight = heightEditingController.text.isEmpty
+        ? heightHint.toString()
+        : heightEditingController.text;
+    String uploadWeight = weightEditingController.text.isEmpty
+        ? weightHint.toString()
+        : weightEditingController.text;
+
     //로그인된 소셜에 따라
     if (isGoogleLoggedIn) {
       await firestore.collection('users').doc(currentUser?.uid).set({
         'gender': maleSelect ? 'male' : 'female',
         'age': _dateTime.year.toString(),
         'nickname': currentUser?.displayName,
-        'height': heightEditingController.text,
-        'weight': weightEditingController.text,
+        'height': uploadHeight,
+        'weight': uploadWeight,
         'brand': proteinYes ? brandEditingController.text : '',
         'taste': proteinYes ? tasteEditingController.text : '',
         'category': proteinYes ? categoryEditingController.text : '',
@@ -111,8 +126,8 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         'gender': maleSelect ? 'male' : 'female',
         'age': _dateTime.year.toString(),
         'nickname': user!.kakaoAccount!.profile!.nickname,
-        'height': heightEditingController.text,
-        'weight': weightEditingController.text,
+        'height': uploadHeight,
+        'weight': uploadWeight,
         'brand': proteinYes ? brandEditingController.text : '',
         'taste': proteinYes ? tasteEditingController.text : '',
         'category': proteinYes ? categoryEditingController.text : '',
@@ -162,10 +177,21 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: widget.startPageIndex);
+    _pageController = PageController();
     getNickname().then((value) {
       setState(() {
         nickname = value!;
+      });
+    });
+    _evRepository.getFirstHeight().then((value) {
+      setState(() {
+        heightHint = value;
+      });
+    });
+
+    _evRepository.getFirstWeight().then((value) {
+      setState(() {
+        weightHint = value;
       });
     });
   }
@@ -593,10 +619,12 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                                       nameEditingController),
                                   Mytextfield(
                                       text: '키',
+                                      hintText: heightHint == 0 ? null : heightHint.toString(),
                                       textEditingController:
                                       heightEditingController),
                                   Mytextfield(
                                       text: '몸무게',
+                                      hintText: weightHint == 0 ? null : weightHint.toString(),
                                       textEditingController:
                                       weightEditingController),
                                   SizedBox(
@@ -611,9 +639,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                     )
                   ],
                 ),
-                (nameEditingController.text.isNotEmpty &&
-                    heightEditingController.text.isNotEmpty &&
-                    weightEditingController.text.isNotEmpty)
+                (nameEditingController.text.isNotEmpty && (maleSelect||femaleSelect))
                     ? nextButton('다음')
                     : deadButton('다음')
               ]),
