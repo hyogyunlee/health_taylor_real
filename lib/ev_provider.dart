@@ -1,6 +1,6 @@
 /*import 'package:flutter/material.dart';
-import 'package:health_taylor/ev.dart';
-import 'package:health_taylor/ev_repositiory.dart';
+import 'package:health_taylor/Info.dart';
+import 'package:health_taylor/Load_Info.dart';
 
 class EvProvider extends ChangeNotifier {
   // EvRepository를 접근(데이터를 받아와야 하기 때문에)

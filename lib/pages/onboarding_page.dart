@@ -2,8 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:health_taylor/ev.dart';
-import 'package:health_taylor/ev_repositiory.dart';
+import 'package:health_taylor/Load_Info.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:health_taylor/components/agePicker.dart';
@@ -41,9 +40,7 @@ class OnBoardingPage extends StatefulWidget {
 }
 
 class _OnBoardingPageState extends State<OnBoardingPage> {
-  EvRepository _evRepository = EvRepository();
-
-  Ev? ev;
+  Load_Info load_info = Load_Info();
 
   int heightHint=0;
   int weightHint=0;
@@ -183,13 +180,13 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         nickname = value!;
       });
     });
-    _evRepository.getFirstHeight().then((value) {
+    load_info.getFirstHeight().then((value) {
       setState(() {
         heightHint = value;
       });
     });
 
-    _evRepository.getFirstWeight().then((value) {
+    load_info.getFirstWeight().then((value) {
       setState(() {
         weightHint = value;
       });
