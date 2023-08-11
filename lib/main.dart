@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:health_taylor/auth/login_page.dart';
+import 'package:health_taylor/notification_controller.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:firebase_core/firebase_core.dart';
@@ -34,6 +36,13 @@ Future<bool> isSignedInKakao() async {
     return true;
   } catch (e) {
     return false;
+  }
+}
+
+class NotificationControllerBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<NotificationController>(() => NotificationController(), fenix: true);
   }
 }
 
@@ -85,36 +94,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-/*import 'package:flutter/material.dart';
-import 'package:health_taylor/ev_provider.dart';
-import 'package:health_taylor/home.dart';
-import 'package:provider/provider.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        // MultiProvider를 통해 여러가지 Provider를 관리
-        home: MultiProvider(
-
-          // ChangeNotifierProvider 통해 변화에 대해 구독
-            providers: [
-              ChangeNotifierProvider(
-                  create: (BuildContext context) => EvProvider())
-            ],
-            child:
-            Home() // home.dart
-        )
-    );
-  }
-}*/
