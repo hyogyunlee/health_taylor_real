@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:health_taylor/auth/login_page.dart';
-import 'package:health_taylor/notification_controller.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:firebase_core/firebase_core.dart';
@@ -36,13 +34,6 @@ Future<bool> isSignedInKakao() async {
     return true;
   } catch (e) {
     return false;
-  }
-}
-
-class NotificationControllerBinding extends Bindings {
-  @override
-  void dependencies() {
-    Get.lazyPut<NotificationController>(() => NotificationController(), fenix: true);
   }
 }
 
