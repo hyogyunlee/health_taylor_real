@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:health_taylor/pages/HomePage/Home_Page.dart';
-import 'package:health_taylor/pages/PortfolioPage/Portfolio_Page.dart';
 import 'package:health_taylor/pages/SocialPage/social_page.dart';
 import 'package:health_taylor/pages/ProfilePage/profile_page.dart';
+import 'package:health_taylor/pages/shopPage/shopping_page.dart';
 
 class All_Page extends StatefulWidget {
   const All_Page({super.key});
@@ -25,7 +25,7 @@ class _HomePageState extends State<All_Page> {
       case 0:
         return const Home_Page();
       case 1:
-        return Page2();
+        return const ShoppingPage();
       case 2:
         return const SocialPage();
       case 3:
@@ -39,68 +39,68 @@ class _HomePageState extends State<All_Page> {
         elevation: 0,
         type: BottomNavigationBarType.fixed,
         // Color(0xff1e2c5b)
-        backgroundColor: Color(0xFF18A5FD),
+        backgroundColor: Colors.white,
         onTap: (int index) {
           setState(() {
             _currentPageIndex = index;
           });
         },
         currentIndex: _currentPageIndex,
-        unselectedItemColor: Colors.blue[700],
-        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.indigo,
+        selectedItemColor: Colors.indigo,
         selectedFontSize: 13,
         unselectedLabelStyle:
-            const TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
+        const TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
         selectedLabelStyle:
-            const TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
-        items: [
+        const TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
+        items: const [
           BottomNavigationBarItem(
             icon: Padding(
-                padding: const EdgeInsets.only(bottom: 5),
+                padding: EdgeInsets.only(bottom: 5),
                 child: Icon(
                   Icons.home_rounded,
-                  color: Colors.blue[700],
+                  color: Colors.indigo,
                 )),
             label: '홈',
-            activeIcon: const Padding(
+            activeIcon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
-                child: Icon(Icons.home_rounded, color: Colors.white)),
+                child: Icon(Icons.home_rounded, color: Colors.indigo)),
           ),
           BottomNavigationBarItem(
             icon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
                 child: Icon(
-                  Icons.book_rounded,
-                  color: Colors.blue[700],
+                  Icons.shopping_cart,
+                  color: Colors.indigo,
                 )),
-            label: '포폴 제공',
-            activeIcon: const Padding(
+            label: '보충제',
+            activeIcon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
-                child: Icon(Icons.book_rounded, color: Colors.white)),
+                child: Icon(Icons.shopping_cart, color: Colors.indigo)),
           ),
           BottomNavigationBarItem(
             icon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
                 child: Icon(
                   Icons.chat_bubble,
-                  color: Colors.blue[700],
+                  color: Colors.indigo,
                 )),
             label: '소셜',
-            activeIcon: const Padding(
+            activeIcon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
-                child: Icon(Icons.chat_bubble, color: Colors.white)),
+                child: Icon(Icons.chat_bubble, color: Colors.indigo)),
           ),
           BottomNavigationBarItem(
             icon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
                 child: Icon(
                   Icons.person,
-                  color: Colors.blue[700],
+                  color: Colors.indigo,
                 )),
             label: '마이',
-            activeIcon: const Padding(
+            activeIcon: Padding(
                 padding: EdgeInsets.only(bottom: 5),
-                child: Icon(Icons.tag_faces_rounded, color: Colors.white)),
+                child: Icon(Icons.tag_faces_rounded, color: Colors.indigo)),
           ),
         ]);
   }

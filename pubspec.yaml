@@ -55,6 +55,8 @@ dependencies:
   flutter_localization: ^0.1.13
   provider: ^6.0.1 # provider 패키지 추가
   carousel_slider: ^4.2.1
+  url_launcher: ^6.1.12
+  firebase_messaging: ^14.6.5
 
 dev_dependencies:
   flutter_test:

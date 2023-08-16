@@ -1,237 +1,132 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:health_taylor/QR_create.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
-import 'package:google_fonts/google_fonts.dart';
 
-GoogleSignIn _googleSignIn = GoogleSignIn();
+class portFolio extends StatefulWidget {
+  const portFolio({super.key});
 
-Future<String?> getNickname() async {
-  String? nickname;
-  try {
-    GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
-    if (googleUser != null) {
-      nickname = googleUser.displayName;
-      return nickname;
-    } else {
-      final kakaoUser = await kakao.UserApi.instance.me();
-      if (kakaoUser.properties != null) {
-        nickname = kakaoUser.properties!['nickname'];
-        return nickname;
-      }
+  @override
+  State<portFolio> createState() => _portFolioState();
+}
+
+class _portFolioState extends State<portFolio> {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  kakao.User? user;
+  String? uid;
+  String? email;
+
+  void Determine_Uid() async {
+    //로그인 확인
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+      user = await kakao.UserApi.instance.me();
+    } catch (e) {
+      isKakaoLoggedIn = false;
     }
-  } catch (error) {
-    print("Error fetching user name: $error");
-  }
-  return '';
-}
 
-class Page2 extends StatefulWidget {
-  @override
-  State<Page2> createState() => _Page2State();
-}
-
-class _Page2State extends State<Page2> {
-  bool isliked = false;
-  void toggleLike() {
-    setState(() {
-      isliked = !isliked;
-    });
-  }
-
-  String nickname = '???';
-  @override
-  void initState() {
-    super.initState();
-    getNickname().then((value) {
+    if (mounted) {
       setState(() {
-        nickname = value!;
+        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? user?.id.toString() : null;
+        email = isGoogleLoggedIn ? currentUser?.email : isKakaoLoggedIn ? user!.kakaoAccount!.email : null;
       });
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Color.fromRGBO(30, 44, 91, 1),
-      child: Center(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.only(top: 80.0),
-              child: Text(
-                '$nickname님의 추천 보충제 포트폴리오 입니다',
-                style: GoogleFonts.blackHanSans(fontWeight: FontWeight.w700, fontSize: 30,color: Colors.white),
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              child: Center(
-                child: Column(
-                  children: [
-                    ElevatedButton(
-                      style: FilledButton.styleFrom(backgroundColor: Colors.white, shape:RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20)))),
-                      onPressed: () {
-                        final qrData = '단백질: 30,'
-                            '아르기닌: 5,'
-                            'BCAA: 2';
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QR_create(data: qrData),
-                          ),
+    Determine_Uid();
+    return Scaffold(backgroundColor: Colors.white,
+        appBar: AppBar(elevation: 0 ,backgroundColor: Colors.white, iconTheme: IconThemeData(color: Colors.black),),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                    child: StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('Pofol')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: ListView.builder(
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                final pofol = snapshot.data!.docs[index];
+                                return Padding(
+                                  padding: const EdgeInsets.all(15.0),
+                                  child: InkWell(
+                                    onTap: () {
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(uid)
+                                          .collection('selectPofol')
+                                          .doc(email)
+                                          .set({
+                                        'Protein': pofol['Protein'],
+                                        'Creatine': pofol['Creatine'],
+                                        'Bcaa': pofol['Bcaa'],
+                                        'Arginin': pofol['Arginin'],
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(15),
+                                          color: Colors.grey[200]),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Text('단백질: ${pofol['Protein']}'),
+                                              Text('크레아틴: ${pofol['Creatine']}'),
+                                              Text('아르기닌: ${pofol['Arginin']}'),
+                                              Text('Bcaa: ${pofol['Bcaa']}'),
+                                            ],
+                                          ),
+                                          GestureDetector(
+                                            onTap: () {},
+                                            child: QrImageView(
+                                              data:
+                                              '단백질: ${pofol['Protein']}g, 크레아틴: ${pofol['Creatine']}g, 아르기닌: ${pofol['Arginin']}g, BCAA: ${pofol['Bcaa']}g',
+                                              version: QrVersions.auto,
+                                              size: 110,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        }
+                        return Center(
+                          child: Container(),
                         );
                       },
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min, // 중앙 정렬된 그룹이 차지하는 공간을 최소한으로 유지하도록 설정합니다.
-                                    children: [
-                                      Icon(Icons.warning, color: Colors.yellow, size: 30),
-                                      Text(
-                                        '유당불내증',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.blackHanSans(color: Colors.black, fontSize: 30),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: toggleLike,
-                                child: Icon(
-                                  isliked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                  color: isliked ? Colors.red : Colors.black,
-                                  size: 28,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Divider(thickness: 2, color: Colors.grey[500]),
-                          Text('단백질 30g (컴뱃 프로틴)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('BCAA 5g (익스트림)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('아르기닌 2g (나우)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
-                      style: FilledButton.styleFrom(backgroundColor: Colors.white, shape:RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20)))),
-                      onPressed: () {
-                        final qrData = '단백질: 23,'
-                            'BCAA: 5,'
-                            '마카: 7';
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QR_create(data: qrData),
-                          ),
-                        );
-                      },
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min, // 중앙 정렬된 그룹이 차지하는 공간을 최소한으로 유지하도록 설정합니다.
-                                    children: [
-                                      Icon(Icons.warning, color: Colors.yellow, size: 30),
-                                      Text(
-                                        '등드름',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.blackHanSans(color: Colors.black, fontSize: 30),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: toggleLike,
-                                child: Icon(
-                                  isliked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                  color: isliked ? Colors.red : Colors.black,
-                                  size: 28,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Divider(thickness: 2, color: Colors.grey[500]),
-                          Text('단백질 23g (아이언맥스)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('BCAA 7g (뉴트리)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('마카 5g (나우)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
-                      style: FilledButton.styleFrom(backgroundColor: Colors.white, shape:RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20)))),
-                      onPressed: () {
-                        final qrData = '단백질: 30,'
-                            '아르기닌: 10,'
-                            'BCAA: 10';
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QR_create(data: qrData),
-                          ),
-                        );
-                      },
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min, // 중앙 정렬된 그룹이 차지하는 공간을 최소한으로 유지하도록 설정합니다.
-                                    children: [
-                                      Icon(Icons.warning, color: Colors.yellow, size: 30),
-                                      Text(
-                                        '고혈압',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.blackHanSans(color: Colors.black, fontSize: 30),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: toggleLike,
-                                child: Icon(
-                                  isliked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                  color: isliked ? Colors.red : Colors.black,
-                                  size: 28,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Divider(thickness: 2, color: Colors.grey[500]),
-                          Text('단백질 30g (셀렉스)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('BCAA 10g (엑스텐드)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                          Text('아르기닌 10g (익스트림)', textAlign: TextAlign.center, style: GoogleFonts.blackHanSans(color: Colors.black,fontSize: 20),),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                    )),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:health_taylor/helper/helper_method.dart';
 import 'package:health_taylor/pages/SocialPage/add_page.dart';
@@ -25,12 +26,13 @@ class _DetailPageState extends State<DetailPage> {
 
   void addComment(String commentText) {
     FirebaseFirestore.instance
-        .collection('User Posts')
+        .collection('User_Posts')
         .doc(widget.postId)
         .collection('Comments')
         .add({
       "CommentText": commentText,
       "CommentedBy": currentUser?.email,
+      "PostAuthorUid": currentUser?.uid, // 게시물 작성자
       "CommentTime": Timestamp.now()
     });
   }
@@ -174,14 +176,14 @@ class _DetailPageState extends State<DetailPage> {
 
   Future<void> deletePost() async {
     final commentDocs = await FirebaseFirestore.instance
-        .collection('User Posts')
+        .collection('User_Posts')
         .doc(widget.postId)
         .collection('Comments')
         .get();
 
     for (var doc in commentDocs.docs) {
       FirebaseFirestore.instance
-          .collection('User Posts')
+          .collection('User_Posts')
           .doc(widget.postId)
           .collection('Comments')
           .doc(doc.id)
@@ -190,7 +192,7 @@ class _DetailPageState extends State<DetailPage> {
 
     // delete post
     FirebaseFirestore.instance
-        .collection('User Posts')
+        .collection('User_Posts')
         .doc(widget.postId)
         .delete()
         .then((value) => print('post deleted'))
@@ -363,7 +365,7 @@ class _DetailPageState extends State<DetailPage> {
                 ),
                 StreamBuilder(
                   stream: FirebaseFirestore.instance
-                      .collection('User Posts')
+                      .collection('User_Posts')
                       .doc(widget.postId)
                       .collection('Comments')
                       .orderBy("CommentTime", descending: true)

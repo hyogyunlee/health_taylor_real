@@ -29,7 +29,7 @@ class _FreeSocialState extends State<FreeSocial> {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection('User Posts')
+            .collection('User_Posts')
             .orderBy('Timestamp', descending: false)
             .snapshots(),
         builder: (context, snapshot) {

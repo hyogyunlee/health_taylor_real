@@ -42,7 +42,7 @@ class _AddPageState extends State<AddPage> {
         await refImage.putFile(_image!);
         final imgUrl = await refImage.getDownloadURL();
 
-        FirebaseFirestore.instance.collection('User Posts').add({
+        FirebaseFirestore.instance.collection('User_Posts').add({
           'UserEmail': currentUser?.email,
           'Title': titleEditingController.text,
           'Content': contentEditingController.text,
@@ -51,7 +51,7 @@ class _AddPageState extends State<AddPage> {
           'Likes': [],
         });
       } else if (_image == null) {
-        FirebaseFirestore.instance.collection('User Posts').add({
+        FirebaseFirestore.instance.collection('User_Posts').add({
           'UserEmail': currentUser?.email,
           'Title': titleEditingController.text,
           'Content': contentEditingController.text,
