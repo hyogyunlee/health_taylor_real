@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:health_taylor/helper/helper_method.dart';
 import 'package:health_taylor/pages/SocialPage/add_page.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
 class DetailPage extends StatefulWidget {
   final String title, content, img, user, postId, time;
@@ -21,8 +22,40 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  @override
+  void initState() {
+    super.initState();
+    Determine_Uid();
+  }
+
   final commenttextEditingController = TextEditingController();
+
+  final currentUser = FirebaseAuth.instance.currentUser;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  kakao.User? user;
+  String? uid;
+  String? email;
+
+  void Determine_Uid() async {
+    //로그인 확인
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+      user = await kakao.UserApi.instance.me();
+    } catch (e) {
+      isKakaoLoggedIn = false;
+    }
+
+    if (mounted) {
+      setState(() {
+        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? user?.id.toString() : null;
+        email = isGoogleLoggedIn ? currentUser?.email : isKakaoLoggedIn ? user!.kakaoAccount!.email : null;
+      });
+    }
+  }
 
   void addComment(String commentText) {
     FirebaseFirestore.instance
@@ -31,8 +64,8 @@ class _DetailPageState extends State<DetailPage> {
         .collection('Comments')
         .add({
       "CommentText": commentText,
-      "CommentedBy": currentUser?.email,
-      "PostAuthorUid": currentUser?.uid, // 게시물 작성자
+      "CommentedBy": email,
+      "PostAuthorUid": uid, // 게시물 작성자
       "CommentTime": Timestamp.now()
     });
   }
