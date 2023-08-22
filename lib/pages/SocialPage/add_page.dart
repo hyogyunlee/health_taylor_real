@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -14,6 +16,12 @@ class AddPage extends StatefulWidget {
 }
 
 class _AddPageState extends State<AddPage> {
+  @override
+  void initState() {
+    super.initState();
+    Determine_Uid();
+  }
+
   final currentUser = FirebaseAuth.instance.currentUser;
   final titleEditingController = TextEditingController();
   final contentEditingController = TextEditingController();
@@ -30,6 +38,31 @@ class _AddPageState extends State<AddPage> {
     });
   }
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  kakao.User? kakao_user;
+  String? email, uid;
+
+  void Determine_Uid() async {
+    //로그인 확인
+    bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
+    bool isKakaoLoggedIn = false;
+
+    try {
+      await kakao.UserApi.instance.accessTokenInfo();
+      isKakaoLoggedIn = true;
+      kakao_user = await kakao.UserApi.instance.me();
+    } catch (e) {
+      isKakaoLoggedIn = false;
+    }
+
+    if (mounted) {
+      setState(() {
+        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? kakao_user?.id.toString() : null;
+        email = isGoogleLoggedIn ? currentUser?.email : isKakaoLoggedIn ? kakao_user!.kakaoAccount!.email : null;
+      });
+    }
+  }
+
   void postMessage() async {
     if (titleEditingController.text.isNotEmpty &&
         contentEditingController.text.isNotEmpty) {
@@ -38,26 +71,28 @@ class _AddPageState extends State<AddPage> {
             .ref()
             .child('PostPhotos')
             .child(
-                '${currentUser!.email?.split('@')[0]}${Timestamp.now()}.png');
+                '${email?.split('@')[0]}${Timestamp.now()}.png');
         await refImage.putFile(_image!);
         final imgUrl = await refImage.getDownloadURL();
 
         FirebaseFirestore.instance.collection('User_Posts').add({
-          'UserEmail': currentUser?.email,
+          'UserEmail': email,
           'Title': titleEditingController.text,
           'Content': contentEditingController.text,
           'Timestamp': Timestamp.now(),
           'Image': imgUrl,
           'Likes': [],
+          'Post_Author_Uid': uid,
         });
       } else if (_image == null) {
         FirebaseFirestore.instance.collection('User_Posts').add({
-          'UserEmail': currentUser?.email,
+          'UserEmail': email,
           'Title': titleEditingController.text,
           'Content': contentEditingController.text,
           'Timestamp': Timestamp.now(),
           'Image': '',
           'Likes': [],
+          'Post_Author_Uid': uid,
         });
       }
     }

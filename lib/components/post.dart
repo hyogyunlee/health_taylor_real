@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:health_taylor/pages/SocialPage/detail_page.dart';
 
 class Post extends StatefulWidget {
-  final String title, content, img, user, postId, time;
+  final String title, content, img, user, postId, post_author_uid, time;
   final List<String> likes;
   const Post({
     super.key,
@@ -13,6 +13,7 @@ class Post extends StatefulWidget {
     required this.likes,
     required this.time,
     required this.title,
+    required this.post_author_uid,
     required this.content,
     required this.img,
   });
@@ -64,6 +65,7 @@ class _PostState extends State<Post> {
                 content: widget.content,
                 img: widget.img,
                 user: widget.user,
+                post_author_uid: widget.post_author_uid,
                 postId: widget.postId,
                 time: widget.time,
               ),

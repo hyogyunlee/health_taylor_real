@@ -56,11 +56,11 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
     const comment = snapshot.data();
 
     // 댓글 작성자와 게시물 작성자가 같으면 알림을 보내지 않습니다
-    /*if (comment.CommentedBy === comment.PostAuthor) {
+    if (comment.CommentedBy === comment.PostAuthor) {
       return;
-    }*/
+    }
 
-    if (!comment.PostAuthorUid) {
+    if (!comment.PostAuthor) {
       console.error(comment);
       console.error("게시물 작성자의 UID가 없습니다.");
       return;
@@ -70,7 +70,7 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
     const postAuthorRef = await admin
       .firestore()
       .collection("users")
-      .doc(comment.PostAuthorUid)
+      .doc(comment.PostAuthor)
       .get();
 
     const postAuthorData = postAuthorRef.data();

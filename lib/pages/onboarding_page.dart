@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:health_taylor/Load_Info.dart';
@@ -80,6 +81,11 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   // 유저 정보 업데이트
   void FirestoreUpload() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // FCM 토큰 얻기
+    String? fcmToken = await messaging.getToken();
+
     //로그인 확인
     bool isGoogleLoggedIn = await _googleSignIn.isSignedIn();
     bool isKakaoLoggedIn = false;
@@ -116,6 +122,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         'family': familyEditingController.text,
         'email': currentUser?.email,
         'photoURL': currentUser?.photoURL,
+        'fcmToken': fcmToken,
       },SetOptions(merge: true));
     } else if (isKakaoLoggedIn) {
       user = await kakao.UserApi.instance.me();
@@ -135,6 +142,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         'family': familyEditingController.text,
         'email':user!.kakaoAccount!.email ?? '',
         'photoURL':user!.kakaoAccount!.profile!.profileImageUrl!,
+        'fcmToken':fcmToken,
       },SetOptions(merge: true));
     }
   }

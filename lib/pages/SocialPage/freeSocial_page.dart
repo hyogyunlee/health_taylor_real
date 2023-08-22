@@ -43,6 +43,7 @@ class _FreeSocialState extends State<FreeSocial> {
                   content: post['Content'],
                   img: post['Image'],
                   user: post['UserEmail'],
+                  post_author_uid: post['Post_Author_Uid'],
                   time: formDate(post['Timestamp']),
                   postId: post.id,
                   likes: List<String>.from(post['Likes'] ?? []),

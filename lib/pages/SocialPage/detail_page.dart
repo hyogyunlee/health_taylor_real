@@ -7,12 +7,13 @@ import 'package:health_taylor/pages/SocialPage/add_page.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
 class DetailPage extends StatefulWidget {
-  final String title, content, img, user, postId, time;
+  final String title, content, img, user, post_author_uid, postId, time;
   const DetailPage(
       {super.key,
       required this.title,
       required this.content,
       required this.user,
+      required this.post_author_uid,
       required this.postId,
       required this.time,
       required this.img});
@@ -32,9 +33,25 @@ class _DetailPageState extends State<DetailPage> {
 
   final currentUser = FirebaseAuth.instance.currentUser;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  kakao.User? user;
-  String? uid;
-  String? email;
+  kakao.User? kakao_user;
+  String? uid, email, title, content, img, user, post_author_uid, time;
+
+
+  void loadPostDetails() async {
+    // 게시물 데이터를 가져오는 코드
+    DocumentSnapshot postSnapshot =
+    await FirebaseFirestore.instance.collection("User_Posts")
+        .doc(widget.postId)
+        .get();
+    setState(() {
+      title = postSnapshot["Title"];
+      content = postSnapshot["Content"];
+      img = postSnapshot["Image"];
+      user = postSnapshot["UserEmail"];
+      post_author_uid=postSnapshot["Uid"];
+      time = postSnapshot["Timestamp"]; // format을 적용하여 원하는 string 형식으로 변환하십시오.
+    });
+  }
 
   void Determine_Uid() async {
     //로그인 확인
@@ -44,15 +61,15 @@ class _DetailPageState extends State<DetailPage> {
     try {
       await kakao.UserApi.instance.accessTokenInfo();
       isKakaoLoggedIn = true;
-      user = await kakao.UserApi.instance.me();
+      kakao_user = await kakao.UserApi.instance.me();
     } catch (e) {
       isKakaoLoggedIn = false;
     }
 
     if (mounted) {
       setState(() {
-        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? user?.id.toString() : null;
-        email = isGoogleLoggedIn ? currentUser?.email : isKakaoLoggedIn ? user!.kakaoAccount!.email : null;
+        uid = isGoogleLoggedIn ? currentUser?.uid : isKakaoLoggedIn ? kakao_user?.id.toString().replaceAll("kakao", "") : null;
+        email = isGoogleLoggedIn ? currentUser?.email : isKakaoLoggedIn ? kakao_user!.kakaoAccount!.email : null;
       });
     }
   }
@@ -64,8 +81,8 @@ class _DetailPageState extends State<DetailPage> {
         .collection('Comments')
         .add({
       "CommentText": commentText,
-      "CommentedBy": email,
-      "PostAuthorUid": uid, // 게시물 작성자
+      "CommentedBy": uid,
+      "PostAuthor": widget.post_author_uid, // 게시물 작성자
       "CommentTime": Timestamp.now()
     });
   }
@@ -141,7 +158,7 @@ class _DetailPageState extends State<DetailPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                if (widget.user == currentUser?.email)
+                if (widget.user == email)
                   ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
@@ -157,7 +174,7 @@ class _DetailPageState extends State<DetailPage> {
                         '삭제하기',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       )),
-                if (widget.user == currentUser?.email)
+                if (widget.user == email)
                   ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
