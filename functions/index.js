@@ -52,33 +52,54 @@ exports.createCustomToken = functions.region("asia-northeast3").https.onRequest(
 exports.sendCommentNotification = functions.region("asia-northeast3").firestore
   .document("User_Posts/{postId}/Comments/{commentId}")
   .onCreate(async (snapshot, context) => {
+    const postId = context.params.postId;
+
     // 댓글 정보 조회
     const comment = snapshot.data();
 
-    // 댓글 작성자와 게시물 작성자가 같으면 알림을 보내지 않습니다
+    // 게시물 작성자와 댓글 작성자가 같으면 알림을 보내지 않습니다
     if (comment.CommentedBy === comment.PostAuthor) {
       return;
     }
 
-    if (!comment.PostAuthor) {
-      console.error(comment);
-      console.error("게시물 작성자의 UID가 없습니다.");
-      return;
-    }
-
-    // 게시물 작성자의 FCM 토큰 조회
-    const postAuthorRef = await admin
+    // 댓글이 달린 게시물의 정보 조회
+    const postSnapshot = await admin
       .firestore()
-      .collection("users")
-      .doc(comment.PostAuthor)
+      .collection("User_Posts")
+      .doc(postId)
       .get();
 
-    const postAuthorData = postAuthorRef.data();
-    if (!postAuthorData || !postAuthorData.fcmToken) {
-      console.error(`FCM 토큰이 없거나 유효하지 않습니다.`);
-      return;
-    }
-    const fcmToken = postAuthorData.fcmToken;
+    // 해당 게시물에 이전에 댓글을 작성한 사용자들의 UID 목록을 생성
+    const previousCommentsSnapshot = await admin
+      .firestore()
+      .collection("User_Posts")
+      .doc(postId)
+      .collection("Comments")
+      .get();
+    const commentUids = [comment.PostAuthor];
+    previousCommentsSnapshot.forEach(docSnapshot => {
+      const previousComment = docSnapshot.data();
+      if (previousComment.CommentedBy !== comment.CommentedBy) {
+        commentUids.push(previousComment.CommentedBy);
+      }
+    });
+
+    console.log("댓글 작성자 UID 목록:", commentUids);
+
+    // 공지 대상자 목록 조회
+    const tokensSnapshot = await admin
+      .firestore()
+      .collection("users")
+      .where(admin.firestore.FieldPath.documentId(), "in", commentUids)
+      .get();
+
+    const fcmTokens = [];
+    tokensSnapshot.forEach(docSnapshot => {
+      const data = docSnapshot.data();
+      if (data.fcmToken) {
+        fcmTokens.push(data.fcmToken);
+      }
+    });
 
     // 알림 메시지 구성
     const payload = {
@@ -89,5 +110,5 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
     };
 
     // 알림 메시지 전송
-    return admin.messaging().sendToDevice(fcmToken, payload);
+    return admin.messaging().sendToDevice(fcmTokens, payload);
 });
