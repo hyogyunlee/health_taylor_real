@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:health_taylor/Load_Info.dart';
+import 'package:health_taylor/API/Load_Info.dart';
 import 'package:health_taylor/pages/All_Pages.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:health_taylor/components/agePicker.dart';
@@ -123,6 +123,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         'email': currentUser?.email,
         'photoURL': currentUser?.photoURL,
         'fcmToken': fcmToken,
+        'notification':false,
       },SetOptions(merge: true));
     } else if (isKakaoLoggedIn) {
       user = await kakao.UserApi.instance.me();
@@ -143,6 +144,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         'email':user!.kakaoAccount!.email ?? '',
         'photoURL':user!.kakaoAccount!.profile!.profileImageUrl!,
         'fcmToken':fcmToken,
+        'notification':false,
       },SetOptions(merge: true));
     }
   }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:health_taylor/Set_Notification.dart';
 import 'package:health_taylor/auth/login_page.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
@@ -143,7 +144,22 @@ class _ProfilePageState extends State<ProfilePage> {
                           height: 30,
                         ),
                         box(Icon(Icons.person), '내정보'),
-                        box(Icon(Icons.notifications), '알림 설정'),
+                        ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Set_Notification(),
+                                ),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.notifications),
+                                Text("알림 설정")
+                              ],
+                            )
+                        ),
                         box(Icon(Icons.announcement_rounded), '공지사항 및 문의'),
                         ElevatedButton(
                           onPressed: () async {

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:health_taylor/Info.dart';
+import 'package:health_taylor/API/Info.dart';
 import 'package:http/http.dart' as http;
 
 class Load_Info {
