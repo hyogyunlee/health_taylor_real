@@ -57,58 +57,39 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
     // 댓글 정보 조회
     const comment = snapshot.data();
 
-    // 게시물 작성자와 댓글 작성자가 같으면 알림을 보내지 않습니다
-    if (comment.CommentedBy === comment.PostAuthor) {
-      return;
-    }
-
-    // 댓글이 달린 게시물의 정보 조회
-    const postSnapshot = await admin
-      .firestore()
-      .collection("User_Posts")
-      .doc(postId)
-      .get();
-
     // 해당 게시물에 이전에 댓글을 작성한 사용자들의 UID 목록을 생성
-    const previousCommentsSnapshot = await admin
-      .firestore()
-      .collection("User_Posts")
-      .doc(postId)
-      .collection("Comments")
-      .get();
-    const commentUids = [comment.PostAuthor];
-    previousCommentsSnapshot.forEach(docSnapshot => {
-      const previousComment = docSnapshot.data();
-      if (previousComment.CommentedBy !== comment.CommentedBy) {
-        commentUids.push(previousComment.CommentedBy);
-      }
-    });
+     const previousCommentsSnapshot=await admin.firestore().collection('User_Posts').doc(postId).collection('Comments').get();
 
-    console.log("댓글 작성자 UID 목록:", commentUids);
+     let commentUidsSet=new Set([comment.PostAuthor]);
 
-    // 공지 대상자 목록 조회
-    const tokensSnapshot = await admin
-      .firestore()
-      .collection("users")
-      .where(admin.firestore.FieldPath.documentId(), "in", commentUids)
-      .get();
+     previousCommentsSnapshot.forEach(docSnapshot=>{
+         let previousComment=docSnapshot.data();
+         if(previousComment.CommentedBy !== comment.CommentedBy){
+             commentUidsSet.add(previousComment.CommentedBy);
+         }
+     });
 
-    const fcmTokens = [];
-    tokensSnapshot.forEach(docSnapshot => {
-      const data = docSnapshot.data();
-      if (data.fcmToken) {
-        fcmTokens.push(data.fcmToken);
-      }
-    });
+     // 공지 대상자 목록 조회 및 알림 설정 확인
+     let fcmTokens=new Set();
 
-    // 알림 메시지 구성
-    const payload = {
-      notification: {
-        title: "새로운 댓글",
-        body: `${comment.CommentedBy.split('@')[0]}님이 댓글을 남겼습니다: ${comment.CommentText}`,
-      },
-    };
+     for(let uid of commentUidsSet){
+         let userDoc=await admin.firestore().collection('users').doc(uid).get();
+         let userData=userDoc.data();
 
-    // 알림 메시지 전송
-    return admin.messaging().sendToDevice(fcmTokens, payload);
+         if(userData.notification && userData.fcmToken){
+             fcmTokens.add(userData.fcmToken);
+         }
+     }
+
+     // 알림 메시지 구성
+     const payload={
+         notification:{
+             title: "새로운 댓글",
+             body: `${comment.CommentedBy.split('@')[0]}님이 댓글을 남겼습니다: ${comment.CommentText}`,
+         },
+     };
+
+     // 알림 메시지 전송
+     return admin.messaging().sendToDevice(Array.from(fcmTokens), payload);
+
 });
