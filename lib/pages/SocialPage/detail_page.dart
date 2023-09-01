@@ -7,7 +7,8 @@ import 'package:health_taylor/pages/SocialPage/add_page.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart' as kakao;
 
 class DetailPage extends StatefulWidget {
-  final String title, content, img, user, post_author_uid, postId, time;
+  final String title, content, img, user, post_author_uid, time;
+  final String? postId;
   const DetailPage(
       {super.key,
       required this.title,

@@ -53,6 +53,7 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
   .document("User_Posts/{postId}/Comments/{commentId}")
   .onCreate(async (snapshot, context) => {
     const postId = context.params.postId;
+    const commentId = context.params.commentId;
 
     // 댓글 정보 조회
     const comment = snapshot.data();
@@ -81,15 +82,19 @@ exports.sendCommentNotification = functions.region("asia-northeast3").firestore
          }
      }
 
-     // 알림 메시지 구성
-     const payload={
-         notification:{
-             title: "새로운 댓글",
-             body: `${comment.CommentedBy.split('@')[0]}님이 댓글을 남겼습니다: ${comment.CommentText}`,
-         },
-     };
+   // 알림 메시지 구성
+   const payload={
+       notification:{
+           title: "새로운 댓글",
+           body: `${comment.CommentedBy.split('@')[0]}님이 댓글을 남겼습니다: ${comment.CommentText}`,
+       },
+       data: {
+          postId: postId,
+          commentId: commentId,
+        },
+   };
 
-     // 알림 메시지 전송
-     return admin.messaging().sendToDevice(Array.from(fcmTokens), payload);
+   // 알림 메시지 전송
+   return admin.messaging().sendToDevice(Array.from(fcmTokens), payload);
 
 });
